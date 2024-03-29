@@ -1,52 +1,72 @@
-# Redefine scenarios to include different caps
-caps = [10_000_000, 25_000_000, 50_000_000]
-discounts = [0.0, 0.2, 0.4, 0.5]
-initial_investment = 100_000
+import streamlit as st
+import pandas as pd
+import numpy as np
+import plotly.graph_objects as go
+from plotly.subplots import make_subplots
 
-# Generate data for combinations of discounts and caps
-rows = []
-for cap in caps:
-    for discount in discounts:
-        for valuation in np.arange(5_000_000, 100_000_000, 10_000):
-            convert_at = min(valuation * (1 - discount), cap)
-            equity = initial_investment / convert_at
-            value_of_equity = equity * valuation
-            roi = value_of_equity / initial_investment
-            
-            rows.append({
-                "Valuation": valuation,
-                "Convert_at": convert_at,
-                "Equity": equity,
-                "Value_of_Equity": value_of_equity,
-                "ROI": roi,
-                "Cap": f"{int(cap/1e6)}M",
-                "Discount": f"{int(discount*100)}%"
-            })
-
-df = pd.DataFrame(rows)
-
-# Create subplots with rows for each metric
-fig = make_subplots(rows=4, cols=1,
-                    subplot_titles=["Valution YOU get (low=good)", "Equity", "Value of your equity", "ROI"],
-                    shared_xaxes=True)
-
-# Mapping of rows to the metrics
-metrics = ["Convert_at", "Equity", "Value_of_Equity", "ROI"]
-metric_labels = ["Conversion Valuation", "Equity (%)", "Value of Equity", "ROI (x)"]
-
-# Add traces for each metric, differentiated by cap
-for row, (metric, label) in enumerate(zip(metrics, metric_labels), start=1):
+def generate_data(caps, discounts, initial_investment=100_000):
+    rows = []
     for cap in caps:
         for discount in discounts:
-            filtered_df = df[(df["Cap"] == f"{int(cap/1e6)}M") & (df["Discount"] == f"{int(discount*100)}%")]
-            fig.add_trace(
-                go.Scatter(x=filtered_df["Valuation"], y=filtered_df[metric] * (100 if metric == "Equity" else 1),
-                           mode='lines', name=f"Cap: {int(cap/1e6)}M, Discount: {int(discount*100)}%"),
-                row=row, col=1
-            )
+            for valuation in np.arange(5_000_000, 100_000_000, 10_000):
+                convert_at = min(valuation * (1 - discount), cap)
+                equity = initial_investment / convert_at
+                value_of_equity = equity * valuation
+                roi = value_of_equity / initial_investment
+                
+                rows.append({
+                    "Valuation": valuation,
+                    "Convert_at": convert_at,
+                    "Equity": equity,
+                    "Value_of_Equity": value_of_equity,
+                    "ROI": roi,
+                    "Cap": f"{int(cap/1e6)}M",
+                    "Discount": f"{discount*100}%"
+                })
+    return pd.DataFrame(rows)
 
-# Update layout
-fig.update_layout(height=2000, width=800, title_text="Investment Metrics across Different Caps and Discounts")
-fig.update_xaxes(title_text="Valuation ($)")
-fig.update_yaxes(title_text="Value", tickformat=".0%")
-fig.show()
+def plot_data(df, discounts):
+    # Create a subplot for each discount
+    cols = len(discounts)
+    fig = make_subplots(rows=4, cols=cols, 
+                        subplot_titles=[f"Discount: {discount}%" for discount in discounts for _ in range(4)],
+                        vertical_spacing=0.1, horizontal_spacing=0.1,
+                        shared_xaxes=True, shared_yaxes='rows',
+                        specs=[[{'secondary_y': True}] * cols] * 4)
+    
+    metrics = ["Convert_at", "Equity", "Value_of_Equity", "ROI"]
+    metric_labels = ["Valuation YOU get", "Equity", "Value of your equity", "ROI"]
+    
+    for col, discount in enumerate(discounts, start=1):
+        for row, metric in enumerate(metrics, start=1):
+            for cap in df['Cap'].unique():
+                filtered_df = df[(df['Discount'] == discount) & (df['Cap'] == cap)]
+                fig.add_trace(go.Scatter(x=filtered_df["Valuation"], 
+                                         y=filtered_df[metric] * (100 if metric == "Equity" else 1),
+                                         mode='lines', 
+                                         name=f"Cap: {cap}"),
+                              row=row, col=col, secondary_y=False)
+    
+    # Update y-axes titles
+    for i, metric_label in enumerate(metric_labels, start=1):
+        fig.update_yaxes(title_text=metric_label, row=i, col=1)
+    
+    # Update layout
+    fig.update_layout(height=1200, width=1000, title_text="Investment Metrics across Different Caps and Discounts")
+    return fig
+
+st.title('Investment Metrics Visualizer')
+
+# User inputs for caps and discounts
+user_caps = st.text_input('Enter valuation caps separated by commas (e.g., 10M,25M,50M)', '10M,25M,50M')
+user_discounts = st.text_input('Enter discounts as percentages separated by commas (e.g., 0%,20%,40%,50%)', '0%,20%,40%,50%')
+
+# Convert inputs to lists of numbers
+caps = [float(cap.strip().replace('M', '')) * 1e6 for cap in user_caps.split(',')]
+discounts = [discount.strip() for discount in user_discounts.split(',')]
+
+# Generate and plot data
+df = generate_data(caps, discounts)
+fig = plot_data(df, discounts)
+
+st.plotly_chart(fig)
