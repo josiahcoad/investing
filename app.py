@@ -63,7 +63,8 @@ user_discounts = st.text_input('Enter discounts as percentages separated by comm
 
 # Convert inputs to lists of numbers
 caps = [float(cap.strip().replace('M', '')) * 1e6 for cap in user_caps.split(',')]
-discounts = [float(discount.strip()) for discount in user_discounts.split(',')]
+discounts = [float(discount.strip().replace('%', '')) / 100 for discount in user_discounts.split(',')]  # Convert to float for calculations
+
 
 # Generate and plot data
 df = generate_data(caps, discounts)
