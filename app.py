@@ -36,11 +36,12 @@ def plot_data(df, discounts):
     
     metrics = ["Convert_at", "Equity", "Value_of_Equity", "ROI"]
     metric_labels = ["Valuation YOU get", "Equity", "Value of your equity", "ROI"]
-    st.write(discounts, metrics)
+
     for col, discount in enumerate(discounts, start=1):
         for row, metric in enumerate(metrics, start=1):
             for cap in df['Cap'].unique():
                 filtered_df = df[(df['Discount'] == discount) & (df['Cap'] == cap)]
+                st.write(filtered_df["Valuation"], filtered_df[metric])
                 fig.add_trace(go.Scatter(x=filtered_df["Valuation"], 
                                          y=filtered_df[metric] * (100 if metric == "Equity" else 1),
                                          mode='lines', 
