@@ -36,7 +36,7 @@ def plot_data(df, discounts):
     
     metrics = ["Convert_at", "Equity", "Value_of_Equity", "ROI"]
     metric_labels = ["Valuation YOU get", "Equity", "Value of your equity", "ROI"]
-    print("HELLO?????")
+    st.text("HELLO?????")
     for col, discount in enumerate(discounts, start=1):
         for row, metric in enumerate(metrics, start=1):
             for cap in df['Cap'].unique():
