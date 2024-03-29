@@ -9,11 +9,11 @@ def generate_data(caps, discounts, initial_investment=100_000):
     for cap in caps:
         for discount in discounts:
             for valuation in np.arange(5_000_000, 100_000_000, 10_000):
-                convert_at = min(valuation * (1 - discount), cap)
+                convert_at = np.minimum(valuation * (1 - discount), cap)
                 equity = initial_investment / convert_at
                 value_of_equity = equity * valuation
                 roi = value_of_equity / initial_investment
-                
+
                 rows.append({
                     "Valuation": valuation,
                     "Convert_at": convert_at,
@@ -46,11 +46,11 @@ def plot_data(df, discounts):
                                          mode='lines', 
                                          name=f"Cap: {cap}"),
                               row=row, col=col, secondary_y=False)
-    
+
     # Update y-axes titles
     for i, metric_label in enumerate(metric_labels, start=1):
         fig.update_yaxes(title_text=metric_label, row=i, col=1)
-    
+
     # Update layout
     fig.update_layout(height=1200, width=1000, title_text="Investment Metrics across Different Caps and Discounts")
     return fig
