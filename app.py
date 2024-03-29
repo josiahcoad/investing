@@ -69,6 +69,6 @@ discounts = [float(discount.strip().replace('%', '')) / 100 for discount in user
 
 # Generate and plot data
 df = generate_data(caps, discounts)
-fig = plot_data(df, discounts)
+fig = plot_data(df, user_discounts.split(','))
 
 st.plotly_chart(fig)
