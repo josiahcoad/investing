@@ -41,6 +41,7 @@ def plot_data(df, discounts):
         for row, metric in enumerate(metrics, start=1):
             for cap in df['Cap'].unique():
                 filtered_df = df[(df['Discount'] == discount) & (df['Cap'] == cap)]
+                print(filtered_df[metric])
                 fig.add_trace(go.Scatter(x=filtered_df["Valuation"], 
                                          y=filtered_df[metric] * (100 if metric == "Equity" else 1),
                                          mode='lines', 
